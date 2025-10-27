@@ -119,13 +119,12 @@ export default function KanaSection() {
   };
 
   return (
-    <div className="space-y-3 md:space-y-6" ref={containerRef}>
+    <div className="space-y-2 md:space-y-6" ref={containerRef}>
       {/* Compact Header: Type Toggle + Score (mobile) / Separate (desktop) */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 md:p-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           {/* Type Toggle */}
           <div className="flex-1">
-            <h2 className="text-sm md:text-lg font-semibold mb-2 md:mb-3 text-gray-900 dark:text-white">Character Type</h2>
             <div className="flex gap-2">
               <button
                 onClick={() => setSelectedType('hiragana')}
@@ -180,7 +179,7 @@ export default function KanaSection() {
       {/* Main Card */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-8">
         {currentKana ? (
-          <div className="space-y-3 md:space-y-6">
+          <div className="space-y-2 md:space-y-6">
             {/* Kana Display */}
             <div className="text-center">
               <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-2">

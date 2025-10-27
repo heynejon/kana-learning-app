@@ -201,13 +201,12 @@ export default function WordsSection() {
   };
 
   return (
-    <div className="space-y-3 md:space-y-6" ref={containerRef}>
+    <div className="space-y-2 md:space-y-6" ref={containerRef}>
       {/* Compact Header: Type Toggle + Score (mobile) / Separate (desktop) */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 md:p-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           {/* Type Toggle */}
           <div className="flex-1">
-            <h2 className="text-sm md:text-lg font-semibold mb-2 md:mb-3 text-gray-900 dark:text-white">Word Type</h2>
             <div className="flex gap-2">
               <button
                 onClick={() => setSelectedType('hiragana')}
@@ -267,7 +266,7 @@ export default function WordsSection() {
             <p className="mt-3 md:mt-4 text-sm md:text-base text-gray-600 dark:text-gray-400">Loading word...</p>
           </div>
         ) : currentWord ? (
-          <div className="space-y-3 md:space-y-6">
+          <div className="space-y-2 md:space-y-6">
             {/* Word Display */}
             <div className="text-center">
               <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-2">
@@ -276,11 +275,6 @@ export default function WordsSection() {
               <div className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white my-4 md:my-6">
                 {currentWord.kana}
               </div>
-              {currentWord.kanji && (
-                <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-2 md:mb-4">
-                  ({currentWord.kanji})
-                </p>
-              )}
             </div>
 
             {/* Input Form */}
