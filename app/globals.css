@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Mobile optimizations */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific - prevent zooming on input focus */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Ensure canvas touch events work properly */
+canvas {
+  touch-action: none;
+}
+
+/* Prevent body scroll on mobile when interacting with canvas */
+html,
+body {
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Safe area for mobile devices with notches */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+}
