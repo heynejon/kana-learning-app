@@ -26,6 +26,7 @@ export default function WordsSection() {
   const inputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const initializingRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Helper function to fetch a single word
   const fetchWord = async (type: WordType): Promise<WordData | null> => {
@@ -132,6 +133,29 @@ export default function WordsSection() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [feedback.type, handleNext]);
 
+  // Handle mobile keyboard visibility - scroll input into view
+  useEffect(() => {
+    const handleViewportResize = () => {
+      if (inputRef.current && document.activeElement === inputRef.current) {
+        // Wait for keyboard animation to complete
+        setTimeout(() => {
+          inputRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }, 300);
+      }
+    };
+
+    // Use visualViewport if available (better for mobile keyboard detection)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportResize);
+      return () => {
+        window.visualViewport?.removeEventListener('resize', handleViewportResize);
+      };
+    }
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentWord || !userInput.trim()) return;
@@ -177,85 +201,90 @@ export default function WordsSection() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Type Toggle */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-        <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Word Type</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setSelectedType('hiragana')}
-            className={`flex-1 py-2 px-3 rounded-lg font-medium transition-colors text-sm ${
-              selectedType === 'hiragana'
-                ? 'bg-[#BC002D] text-white'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-            }`}
-          >
-            Hiragana
-          </button>
-          <button
-            onClick={() => setSelectedType('katakana')}
-            className={`flex-1 py-2 px-3 rounded-lg font-medium transition-colors text-sm ${
-              selectedType === 'katakana'
-                ? 'bg-[#BC002D] text-white'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-            }`}
-          >
-            Katakana
-          </button>
-          <button
-            onClick={() => setSelectedType('mix')}
-            className={`flex-1 py-2 px-3 rounded-lg font-medium transition-colors text-sm ${
-              selectedType === 'mix'
-                ? 'bg-[#BC002D] text-white'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-            }`}
-          >
-            Mix
-          </button>
-        </div>
-      </div>
+    <div className="space-y-3 md:space-y-6" ref={containerRef}>
+      {/* Compact Header: Type Toggle + Score (mobile) / Separate (desktop) */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 md:p-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          {/* Type Toggle */}
+          <div className="flex-1">
+            <h2 className="text-sm md:text-lg font-semibold mb-2 md:mb-3 text-gray-900 dark:text-white">Word Type</h2>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSelectedType('hiragana')}
+                className={`flex-1 py-1.5 md:py-2 px-2 md:px-3 rounded-lg font-medium transition-colors text-xs md:text-sm ${
+                  selectedType === 'hiragana'
+                    ? 'bg-[#BC002D] text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                Hiragana
+              </button>
+              <button
+                onClick={() => setSelectedType('katakana')}
+                className={`flex-1 py-1.5 md:py-2 px-2 md:px-3 rounded-lg font-medium transition-colors text-xs md:text-sm ${
+                  selectedType === 'katakana'
+                    ? 'bg-[#BC002D] text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                Katakana
+              </button>
+              <button
+                onClick={() => setSelectedType('mix')}
+                className={`flex-1 py-1.5 md:py-2 px-2 md:px-3 rounded-lg font-medium transition-colors text-xs md:text-sm ${
+                  selectedType === 'mix'
+                    ? 'bg-[#BC002D] text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                Mix
+              </button>
+            </div>
+          </div>
 
-      {/* Score */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-        <div className="text-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Score</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {score.correct} / {score.total}
-            {score.total > 0 && (
-              <span className="text-sm ml-2 text-gray-600 dark:text-gray-400">
-                ({Math.round((score.correct / score.total) * 100)}%)
-              </span>
-            )}
-          </p>
+          {/* Score */}
+          <div className="md:ml-4 md:min-w-[120px]">
+            <div className="text-center">
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Score</p>
+              <p className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                {score.correct} / {score.total}
+                {score.total > 0 && (
+                  <span className="text-xs md:text-sm ml-2 text-gray-600 dark:text-gray-400">
+                    ({Math.round((score.correct / score.total) * 100)}%)
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Main Card */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-8">
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#BC002D] mx-auto"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading word...</p>
+          <div className="text-center py-8 md:py-12">
+            <div className="animate-spin rounded-full h-10 w-10 md:h-12 md:w-12 border-b-2 border-[#BC002D] mx-auto"></div>
+            <p className="mt-3 md:mt-4 text-sm md:text-base text-gray-600 dark:text-gray-400">Loading word...</p>
           </div>
         ) : currentWord ? (
-          <div className="space-y-6">
+          <div className="space-y-3 md:space-y-6">
             {/* Word Display */}
             <div className="text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-2">
                 Type the romanji for this word:
               </p>
-              <div className="text-7xl font-bold text-gray-900 dark:text-white my-6">
+              <div className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white my-4 md:my-6">
                 {currentWord.kana}
               </div>
               {currentWord.kanji && (
-                <p className="text-2xl text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-2 md:mb-4">
                   ({currentWord.kanji})
                 </p>
               )}
             </div>
 
             {/* Input Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
               <div>
                 <label htmlFor="word-answer" className="sr-only">
                   Your answer
@@ -268,7 +297,7 @@ export default function WordsSection() {
                   onChange={(e) => setUserInput(e.target.value)}
                   disabled={feedback.type !== null}
                   placeholder="Type the romanji (e.g., neko, inu)"
-                  className="w-full px-4 py-3 text-lg border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#BC002D] focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 text-base md:text-lg border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#BC002D] focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50"
                   autoComplete="off"
                   autoFocus
                 />
@@ -277,7 +306,7 @@ export default function WordsSection() {
               {/* Feedback */}
               {feedback.type && (
                 <div
-                  className={`p-4 rounded-lg ${
+                  className={`p-3 md:p-4 rounded-lg text-sm md:text-base ${
                     feedback.type === 'correct'
                       ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100'
                       : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100'
@@ -289,28 +318,28 @@ export default function WordsSection() {
 
               {/* Meaning - shown after feedback */}
               {feedback.type !== null && (
-                <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3">
-                  <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
+                <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-2.5 md:p-3">
+                  <p className="text-xs md:text-sm font-medium text-blue-900 dark:text-blue-200">
                     Meaning: {currentWord.meanings}
                   </p>
                 </div>
               )}
 
               {/* Buttons */}
-              <div className="flex gap-3">
+              <div className="flex gap-2 md:gap-3">
                 {feedback.type === null ? (
                   <>
                     <button
                       type="submit"
                       disabled={!userInput.trim()}
-                      className="flex-1 bg-[#BC002D] hover:bg-[#a3002a] disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:cursor-not-allowed"
+                      className="flex-1 bg-[#BC002D] hover:bg-[#a3002a] disabled:bg-gray-400 text-white font-semibold py-2.5 md:py-3 px-4 md:px-6 rounded-lg transition-colors disabled:cursor-not-allowed text-sm md:text-base"
                     >
                       Submit
                     </button>
                     <button
                       type="button"
                       onClick={handleSkip}
-                      className="px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg transition-colors"
+                      className="px-4 md:px-6 py-2.5 md:py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg transition-colors text-sm md:text-base"
                     >
                       Skip
                     </button>
@@ -319,7 +348,7 @@ export default function WordsSection() {
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="flex-1 bg-[#BC002D] hover:bg-[#a3002a] text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                    className="flex-1 bg-[#BC002D] hover:bg-[#a3002a] text-white font-semibold py-2.5 md:py-3 px-4 md:px-6 rounded-lg transition-colors text-sm md:text-base"
                   >
                     Next (or press Enter)
                   </button>
@@ -328,7 +357,7 @@ export default function WordsSection() {
             </form>
           </div>
         ) : (
-          <div className="text-center text-red-500">
+          <div className="text-center text-red-500 text-sm md:text-base">
             Failed to load word. Please try again.
           </div>
         )}
