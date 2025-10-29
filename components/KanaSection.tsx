@@ -39,6 +39,9 @@ export default function KanaSection() {
 
   // Handle advancing to next kana
   const handleNext = () => {
+    // Focus FIRST, synchronously, while we still have the user gesture context
+    inputRef.current?.focus();
+
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
@@ -49,13 +52,9 @@ export default function KanaSection() {
     setUserInput('');
     setFeedback({ type: null, message: '' });
 
-    // Focus immediately for better mobile support (triggered by user interaction)
-    // Try multiple times to ensure it works on mobile browsers
-    requestAnimationFrame(() => {
-      inputRef.current?.focus();
-      setTimeout(() => inputRef.current?.focus(), 50);
-      setTimeout(() => inputRef.current?.focus(), 150);
-    });
+    // Additional focus attempts after state updates complete
+    setTimeout(() => inputRef.current?.focus(), 0);
+    setTimeout(() => inputRef.current?.focus(), 50);
   };
 
   // Handle Enter key press to advance after feedback
@@ -209,11 +208,24 @@ export default function KanaSection() {
                   id="answer"
                   type="text"
                   value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  onClick={() => inputRef.current?.focus()}
-                  disabled={feedback.type !== null}
+                  onChange={(e) => {
+                    if (feedback.type === null) {
+                      setUserInput(e.target.value);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && feedback.type === null && userInput.trim()) {
+                      e.preventDefault();
+                      const form = e.currentTarget.form;
+                      if (form) {
+                        form.requestSubmit();
+                      }
+                    }
+                  }}
+                  readOnly={feedback.type !== null}
                   placeholder="Type the romanji (e.g., ka, shi, n)"
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 text-base md:text-lg border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#BC002D] focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50"
+                  className="w-full px-3 md:px-4 py-2.5 md:py-3 text-base md:text-lg border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#BC002D] focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  style={feedback.type !== null ? { opacity: 0.5 } : undefined}
                   autoComplete="off"
                   autoFocus
                 />
