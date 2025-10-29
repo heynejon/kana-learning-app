@@ -72,8 +72,10 @@ export default function WordsSection() {
       if (first) {
         setCurrentWord(first);
         setNextWord(second);
-        // Auto-focus the input after word loads
+        // Auto-focus the input after word loads - multiple attempts for mobile
         setTimeout(() => inputRef.current?.focus(), 100);
+        setTimeout(() => inputRef.current?.focus(), 200);
+        setTimeout(() => inputRef.current?.focus(), 350);
       } else {
         setFeedback({
           type: 'incorrect',
@@ -105,7 +107,14 @@ export default function WordsSection() {
       setCurrentWord(nextWord);
       setUserInput('');
       setFeedback({ type: null, message: '' });
-      setTimeout(() => inputRef.current?.focus(), 100);
+
+      // Focus immediately for better mobile support (triggered by user interaction)
+      // Try multiple times to ensure it works on mobile browsers
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+        setTimeout(() => inputRef.current?.focus(), 50);
+        setTimeout(() => inputRef.current?.focus(), 150);
+      });
 
       // Fetch the next word in the background
       const newNext = await fetchWord(selectedType);
@@ -289,6 +298,7 @@ export default function WordsSection() {
                   type="text"
                   value={userInput}
                   onChange={(e) => setUserInput(e.target.value)}
+                  onClick={() => inputRef.current?.focus()}
                   disabled={feedback.type !== null}
                   placeholder="Type the romanji (e.g., neko, inu)"
                   className="w-full px-3 md:px-4 py-2.5 md:py-3 text-base md:text-lg border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#BC002D] focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50"

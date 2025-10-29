@@ -31,8 +31,10 @@ export default function KanaSection() {
     setUserInput('');
     setFeedback({ type: null, message: '' });
 
-    // Auto-focus the input
+    // Auto-focus the input - multiple attempts for mobile
     setTimeout(() => inputRef.current?.focus(), 100);
+    setTimeout(() => inputRef.current?.focus(), 200);
+    setTimeout(() => inputRef.current?.focus(), 350);
   }, [selectedType]);
 
   // Handle advancing to next kana
@@ -46,8 +48,14 @@ export default function KanaSection() {
     setCurrentKana(getRandomKana(types));
     setUserInput('');
     setFeedback({ type: null, message: '' });
-    // Delay focus to allow React to re-render and enable the input
-    setTimeout(() => inputRef.current?.focus(), 100);
+
+    // Focus immediately for better mobile support (triggered by user interaction)
+    // Try multiple times to ensure it works on mobile browsers
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      setTimeout(() => inputRef.current?.focus(), 50);
+      setTimeout(() => inputRef.current?.focus(), 150);
+    });
   };
 
   // Handle Enter key press to advance after feedback
@@ -202,6 +210,7 @@ export default function KanaSection() {
                   type="text"
                   value={userInput}
                   onChange={(e) => setUserInput(e.target.value)}
+                  onClick={() => inputRef.current?.focus()}
                   disabled={feedback.type !== null}
                   placeholder="Type the romanji (e.g., ka, shi, n)"
                   className="w-full px-3 md:px-4 py-2.5 md:py-3 text-base md:text-lg border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#BC002D] focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50"
