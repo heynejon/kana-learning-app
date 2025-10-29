@@ -4,8 +4,9 @@ import { useState } from 'react';
 import KanaSection from '@/components/KanaSection';
 import WordsSection from '@/components/WordsSection';
 import WritingSection from '@/components/WritingSection';
+import ChartsSection from '@/components/ChartsSection';
 
-type Section = 'sounds' | 'words' | 'writing';
+type Section = 'sounds' | 'words' | 'writing' | 'charts';
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState<Section>('sounds');
@@ -55,6 +56,16 @@ export default function Home() {
             >
               Writing
             </button>
+            <button
+              onClick={() => setActiveSection('charts')}
+              className={`flex-1 py-3 px-4 text-center font-medium transition-colors ${
+                activeSection === 'charts'
+                  ? 'border-b-2 border-[#BC002D] text-[#BC002D]'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Charts
+            </button>
           </div>
         </div>
       </nav>
@@ -69,6 +80,9 @@ export default function Home() {
         </div>
         <div className={activeSection === 'writing' ? 'block' : 'hidden'}>
           <WritingSection />
+        </div>
+        <div className={activeSection === 'charts' ? 'block' : 'hidden'}>
+          <ChartsSection />
         </div>
       </main>
     </div>
