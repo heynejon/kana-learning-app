@@ -210,15 +210,6 @@ export default function KanaSection() {
                       setUserInput(e.target.value);
                     }
                   }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && feedback.type === null && userInput.trim()) {
-                      e.preventDefault();
-                      const form = e.currentTarget.form;
-                      if (form) {
-                        form.requestSubmit();
-                      }
-                    }
-                  }}
                   placeholder="Type the romanji (e.g., ka, shi, n)"
                   className="w-full px-3 md:px-4 py-2.5 md:py-3 text-base md:text-lg border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#BC002D] focus:border-transparent dark:bg-gray-700 dark:text-white"
                   autoComplete="off"
