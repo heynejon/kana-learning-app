@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { kanaData } from '@/lib/kanaData';
 
-type ChartView = 'hiragana' | 'katakana' | 'both';
+type ChartView = 'hiragana' | 'katakana';
 
 export default function ChartsSection() {
   const [view, setView] = useState<ChartView>('hiragana');
@@ -40,10 +40,7 @@ export default function ChartsSection() {
     const rows = organizeIntoRows(type);
 
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 md:p-6 mb-4">
-        <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-3 md:mb-4 capitalize">
-          {type}
-        </h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 md:p-6">
         <div className="space-y-1 md:space-y-2">
           {rows.map((row, rowIndex) => (
             <div
@@ -101,29 +98,12 @@ export default function ChartsSection() {
           >
             Katakana
           </button>
-          <button
-            onClick={() => setView('both')}
-            className={`flex-1 py-1.5 md:py-2 px-2 md:px-3 rounded-lg font-medium transition-colors text-xs md:text-sm ${
-              view === 'both'
-                ? 'bg-[#BC002D] text-white'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-            }`}
-          >
-            Both
-          </button>
         </div>
       </div>
 
       {/* Charts */}
       <div>
-        {view === 'both' ? (
-          <>
-            {renderTable('hiragana')}
-            {renderTable('katakana')}
-          </>
-        ) : (
-          renderTable(view)
-        )}
+        {renderTable(view)}
       </div>
     </div>
   );
