@@ -108,7 +108,6 @@ export default function WritingSection() {
     <div className="space-y-6">
       {/* Mode Toggle */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-        <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Writing Mode</h2>
         <div className="flex gap-3">
           <button
             onClick={() => {
@@ -137,11 +136,6 @@ export default function WritingSection() {
             What Sound?
           </button>
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-          {mode === 'practice'
-            ? "You'll be shown a sound - draw the corresponding kana character"
-            : "Draw a kana character - the app will identify it"}
-        </p>
       </div>
 
       {/* Main Card */}
