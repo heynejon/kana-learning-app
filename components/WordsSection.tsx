@@ -77,17 +77,15 @@ export default function WordsSection() {
         setTimeout(() => inputRef.current?.focus(), 200);
         setTimeout(() => inputRef.current?.focus(), 350);
       } else {
-        setFeedback({
-          type: 'incorrect',
-          message: 'Failed to load word. Please try again.',
-        });
+        // Error: set currentWord to null to show retry button
+        setCurrentWord(null);
+        setNextWord(null);
       }
     } catch (error) {
       console.error('Error initializing words:', error);
-      setFeedback({
-        type: 'incorrect',
-        message: 'Failed to load word. Please try again.',
-      });
+      // Error: set currentWord to null to show retry button
+      setCurrentWord(null);
+      setNextWord(null);
     } finally {
       setIsLoading(false);
       initializingRef.current = false;
@@ -269,7 +267,7 @@ export default function WordsSection() {
             <div className="animate-spin rounded-full h-10 w-10 md:h-12 md:w-12 border-b-2 border-[#BC002D] mx-auto"></div>
             <p className="mt-3 md:mt-4 text-sm md:text-base text-gray-600 dark:text-gray-400">Loading word...</p>
           </div>
-        ) : currentWord ? (
+        ) : currentWord && !isLoading ? (
           <div className="space-y-2 md:space-y-6">
             {/* Word Display */}
             <div className="text-center">
@@ -365,8 +363,16 @@ export default function WordsSection() {
             </form>
           </div>
         ) : (
-          <div className="text-center text-red-500 text-sm md:text-base">
-            Failed to load word. Please try again.
+          <div className="text-center py-8">
+            <div className="text-red-500 text-sm md:text-base mb-4">
+              Failed to load word from Jisho API
+            </div>
+            <button
+              onClick={initializeWords}
+              className="bg-[#BC002D] hover:bg-[#a3002a] text-white font-semibold py-2.5 md:py-3 px-6 md:px-8 rounded-lg transition-colors text-sm md:text-base"
+            >
+              Retry
+            </button>
           </div>
         )}
       </div>
