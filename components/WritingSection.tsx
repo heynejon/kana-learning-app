@@ -33,16 +33,21 @@ export default function WritingSection() {
       // Store current drawing data if it exists
       const currentData = signaturePadRef.current?.toData();
 
+      // Clean up old instance
+      if (signaturePadRef.current) {
+        signaturePadRef.current.off();
+        signaturePadRef.current = null;
+      }
+
       // Setting canvas width/height clears it and removes event listeners
       canvas.width = size;
       canvas.height = size;
 
-      // Always recreate SignaturePad after canvas resize
-      // (canvas resize destroys event listeners)
-      if (signaturePadRef.current) {
-        signaturePadRef.current.off(); // Remove old event listeners
-      }
+      // Also set CSS size to match buffer size
+      canvas.style.width = `${size}px`;
+      canvas.style.height = `${size}px`;
 
+      // Create new SignaturePad instance
       signaturePadRef.current = new SignaturePad(canvas, {
         minWidth: 2,
         maxWidth: 6,
@@ -57,12 +62,20 @@ export default function WritingSection() {
       }
     };
 
-    resizeCanvas();
+    // Use timeout to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
+      resizeCanvas();
+    }, 100);
+
     window.addEventListener('resize', resizeCanvas);
 
     return () => {
+      clearTimeout(timeoutId);
       window.removeEventListener('resize', resizeCanvas);
-      signaturePadRef.current = null;
+      if (signaturePadRef.current) {
+        signaturePadRef.current.off();
+        signaturePadRef.current = null;
+      }
     };
   }, []);
 
@@ -157,8 +170,7 @@ export default function WritingSection() {
               <div className="border-4 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white">
                 <canvas
                   ref={canvasRef}
-                  className="cursor-crosshair"
-                  style={{ touchAction: 'none', display: 'block' }}
+                  className="cursor-crosshair block"
                 />
               </div>
             </div>
