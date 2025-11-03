@@ -105,14 +105,14 @@ export default function WritingSection() {
 
             {/* Canvas */}
             <div className="flex justify-center">
-              <div className="border-4 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white">
+              <div className="border-4 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white w-fit mx-auto">
                 <SignatureCanvas
                   ref={sigCanvas}
                   canvasProps={{
-                    width: 400,
-                    height: 400,
+                    width: 300,
+                    height: 300,
                     className: 'signature-canvas',
-                    style: { width: '100%', maxWidth: '400px', height: 'auto', touchAction: 'none' }
+                    style: { display: 'block', touchAction: 'none' }
                   }}
                   minWidth={2}
                   maxWidth={6}
