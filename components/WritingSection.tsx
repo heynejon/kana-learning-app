@@ -157,8 +157,8 @@ export default function WritingSection() {
               <div className="border-4 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white">
                 <canvas
                   ref={canvasRef}
-                  className="touch-none cursor-crosshair"
-                  style={{ maxWidth: '100%', height: 'auto' }}
+                  className="cursor-crosshair"
+                  style={{ touchAction: 'none', display: 'block' }}
                 />
               </div>
             </div>
