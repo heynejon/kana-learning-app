@@ -11,6 +11,7 @@ export default function WritingSection() {
   const [isDrawing, setIsDrawing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showAnswer, setShowAnswer] = useState(false);
+  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     // Generate initial kana
@@ -34,11 +35,13 @@ export default function WritingSection() {
       canvas.width = size;
       canvas.height = size;
 
-      // Reset canvas style
+      // Reset canvas style with improved settings
       ctx.strokeStyle = '#000';
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 6;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
     };
 
     resizeCanvas();
@@ -59,6 +62,9 @@ export default function WritingSection() {
     const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
     const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
 
+    // Store the starting point for smooth curve drawing
+    lastPointRef.current = { x, y };
+
     ctx.beginPath();
     ctx.moveTo(x, y);
   };
@@ -76,12 +82,24 @@ export default function WritingSection() {
     const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
     const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
 
-    ctx.lineTo(x, y);
-    ctx.stroke();
+    if (lastPointRef.current) {
+      // Use quadratic curve for smooth drawing
+      // The control point is the last point, and we draw to the midpoint
+      const midX = (lastPointRef.current.x + x) / 2;
+      const midY = (lastPointRef.current.y + y) / 2;
+
+      ctx.quadraticCurveTo(lastPointRef.current.x, lastPointRef.current.y, midX, midY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(midX, midY);
+    }
+
+    lastPointRef.current = { x, y };
   };
 
   const stopDrawing = () => {
     setIsDrawing(false);
+    lastPointRef.current = null;
   };
 
   const clearCanvas = () => {
@@ -93,6 +111,7 @@ export default function WritingSection() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     setShowAnswer(false);
+    lastPointRef.current = null;
   };
 
   const handleNext = () => {
