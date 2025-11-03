@@ -19,65 +19,50 @@ export default function WritingSection() {
   }, []);
 
   useEffect(() => {
-    // Initialize SignaturePad
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Set canvas size
-    const resizeCanvas = () => {
+    // Function to resize canvas and reinitialize SignaturePad
+    function resizeCanvas() {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
       const container = canvas.parentElement;
       if (!container) return;
 
-      const size = Math.min(container.clientWidth - 32, 400);
+      // Get container width and calculate size
+      const containerWidth = container.clientWidth;
+      const size = Math.min(containerWidth, 400);
 
-      // Store current drawing data if it exists
-      const currentData = signaturePadRef.current?.toData();
+      // Set display size (CSS pixels)
+      canvas.width = size * ratio;
+      canvas.height = size * ratio;
+      canvas.style.width = size + 'px';
+      canvas.style.height = size + 'px';
 
-      // Clean up old instance
-      if (signaturePadRef.current) {
-        signaturePadRef.current.off();
-        signaturePadRef.current = null;
+      // Scale for high DPI displays
+      const context = canvas.getContext('2d');
+      if (context) {
+        context.scale(ratio, ratio);
       }
 
-      // Setting canvas width/height clears it and removes event listeners
-      canvas.width = size;
-      canvas.height = size;
+      // Reinitialize SignaturePad
+      if (signaturePadRef.current) {
+        signaturePadRef.current.clear();
+      }
 
-      // Also set CSS size to match buffer size
-      canvas.style.width = `${size}px`;
-      canvas.style.height = `${size}px`;
-
-      // Critical for mobile: prevent browser from handling touch gestures
-      canvas.style.touchAction = 'none';
-
-      // Create new SignaturePad instance
       signaturePadRef.current = new SignaturePad(canvas, {
         minWidth: 2,
         maxWidth: 6,
         penColor: '#000',
-        velocityFilterWeight: 0.7,
-        throttle: 0,
       });
+    }
 
-      // Restore drawing data if it existed
-      if (currentData && currentData.length > 0) {
-        signaturePadRef.current.fromData(currentData);
-      }
-    };
-
-    // Use timeout to ensure DOM is ready
-    const timeoutId = setTimeout(() => {
-      resizeCanvas();
-    }, 100);
-
+    resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
     return () => {
-      clearTimeout(timeoutId);
       window.removeEventListener('resize', resizeCanvas);
       if (signaturePadRef.current) {
         signaturePadRef.current.off();
-        signaturePadRef.current = null;
       }
     };
   }, []);
@@ -173,7 +158,7 @@ export default function WritingSection() {
               <div className="border-4 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white">
                 <canvas
                   ref={canvasRef}
-                  className="cursor-crosshair block"
+                  style={{ touchAction: 'none' }}
                 />
               </div>
             </div>
