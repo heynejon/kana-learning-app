@@ -2,16 +2,16 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { getRandomKana, KanaChar } from '@/lib/kanaData';
+import SignaturePad from 'signature_pad';
 
 type WritingMode = 'identify' | 'practice';
 
 export default function WritingSection() {
   const [mode, setMode] = useState<WritingMode>('practice');
   const [currentKana, setCurrentKana] = useState<KanaChar | null>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const signaturePadRef = useRef<SignaturePad | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
-  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     // Generate initial kana
@@ -19,12 +19,9 @@ export default function WritingSection() {
   }, []);
 
   useEffect(() => {
-    // Initialize canvas
+    // Initialize SignaturePad
     const canvas = canvasRef.current;
     if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
 
     // Set canvas size
     const resizeCanvas = () => {
@@ -32,86 +29,46 @@ export default function WritingSection() {
       if (!container) return;
 
       const size = Math.min(container.clientWidth - 32, 400);
+
+      // Store current drawing data if it exists
+      const currentData = signaturePadRef.current?.toData();
+
       canvas.width = size;
       canvas.height = size;
 
-      // Reset canvas style with improved settings
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 6;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
+      // Reinitialize SignaturePad after resize
+      if (signaturePadRef.current) {
+        signaturePadRef.current.clear();
+      } else {
+        signaturePadRef.current = new SignaturePad(canvas, {
+          minWidth: 2,
+          maxWidth: 6,
+          penColor: '#000',
+          velocityFilterWeight: 0.7,
+          throttle: 0,
+        });
+      }
+
+      // Restore drawing data if it existed
+      if (currentData) {
+        signaturePadRef.current.fromData(currentData);
+      }
     };
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    return () => window.removeEventListener('resize', resizeCanvas);
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      signaturePadRef.current = null;
+    };
   }, []);
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    setIsDrawing(true);
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
-
-    // Store the starting point for smooth curve drawing
-    lastPointRef.current = { x, y };
-
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  };
-
-  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = 'touches' in e ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = 'touches' in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
-
-    if (lastPointRef.current) {
-      // Use quadratic curve for smooth drawing
-      // The control point is the last point, and we draw to the midpoint
-      const midX = (lastPointRef.current.x + x) / 2;
-      const midY = (lastPointRef.current.y + y) / 2;
-
-      ctx.quadraticCurveTo(lastPointRef.current.x, lastPointRef.current.y, midX, midY);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(midX, midY);
-    }
-
-    lastPointRef.current = { x, y };
-  };
-
-  const stopDrawing = () => {
-    setIsDrawing(false);
-    lastPointRef.current = null;
-  };
-
   const clearCanvas = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (signaturePadRef.current) {
+      signaturePadRef.current.clear();
+    }
     setShowAnswer(false);
-    lastPointRef.current = null;
   };
 
   const handleNext = () => {
@@ -198,22 +155,6 @@ export default function WritingSection() {
               <div className="border-4 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white">
                 <canvas
                   ref={canvasRef}
-                  onMouseDown={startDrawing}
-                  onMouseMove={draw}
-                  onMouseUp={stopDrawing}
-                  onMouseLeave={stopDrawing}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    startDrawing(e);
-                  }}
-                  onTouchMove={(e) => {
-                    e.preventDefault();
-                    draw(e);
-                  }}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
-                    stopDrawing();
-                  }}
                   className="touch-none cursor-crosshair"
                   style={{ maxWidth: '100%', height: 'auto' }}
                 />
