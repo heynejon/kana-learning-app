@@ -47,6 +47,9 @@ export default function WritingSection() {
       canvas.style.width = `${size}px`;
       canvas.style.height = `${size}px`;
 
+      // Critical for mobile: prevent browser from handling touch gestures
+      canvas.style.touchAction = 'none';
+
       // Create new SignaturePad instance
       signaturePadRef.current = new SignaturePad(canvas, {
         minWidth: 2,
