@@ -25,10 +25,10 @@ export default function Home() {
       {/* Navigation Tabs */}
       <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="flex space-x-1">
+          <div className="flex space-x-1 overflow-x-auto">
             <button
               onClick={() => setActiveSection('sounds')}
-              className={`flex-1 py-3 px-4 text-center font-medium transition-colors ${
+              className={`flex-1 min-w-[80px] py-3 px-4 text-center font-medium transition-colors whitespace-nowrap ${
                 activeSection === 'sounds'
                   ? 'border-b-2 border-[#BC002D] text-[#BC002D]'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -38,7 +38,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => setActiveSection('words')}
-              className={`flex-1 py-3 px-4 text-center font-medium transition-colors ${
+              className={`flex-1 min-w-[80px] py-3 px-4 text-center font-medium transition-colors whitespace-nowrap ${
                 activeSection === 'words'
                   ? 'border-b-2 border-[#BC002D] text-[#BC002D]'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -48,7 +48,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => setActiveSection('writing')}
-              className={`flex-1 py-3 px-4 text-center font-medium transition-colors ${
+              className={`flex-1 min-w-[80px] py-3 px-4 text-center font-medium transition-colors whitespace-nowrap ${
                 activeSection === 'writing'
                   ? 'border-b-2 border-[#BC002D] text-[#BC002D]'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -58,7 +58,7 @@ export default function Home() {
             </button>
             <button
               onClick={() => setActiveSection('charts')}
-              className={`flex-1 py-3 px-4 text-center font-medium transition-colors ${
+              className={`flex-1 min-w-[80px] py-3 px-4 text-center font-medium transition-colors whitespace-nowrap ${
                 activeSection === 'charts'
                   ? 'border-b-2 border-[#BC002D] text-[#BC002D]'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
