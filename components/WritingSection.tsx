@@ -2,15 +2,14 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { getRandomKana, KanaChar } from '@/lib/kanaData';
-import SignaturePad from 'signature_pad';
+import SignatureCanvas from 'react-signature-canvas';
 
 type WritingMode = 'identify' | 'practice';
 
 export default function WritingSection() {
   const [mode, setMode] = useState<WritingMode>('practice');
   const [currentKana, setCurrentKana] = useState<KanaChar | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const signaturePadRef = useRef<SignaturePad | null>(null);
+  const sigCanvas = useRef<SignatureCanvas>(null);
   const [showAnswer, setShowAnswer] = useState(false);
 
   useEffect(() => {
@@ -18,55 +17,9 @@ export default function WritingSection() {
     setCurrentKana(getRandomKana(['hiragana', 'katakana']));
   }, []);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    // Set canvas CSS size first
-    const container = canvas.parentElement;
-    if (container) {
-      const size = Math.min(container.clientWidth, 400);
-      canvas.style.width = size + 'px';
-      canvas.style.height = size + 'px';
-    }
-
-    // Function to resize canvas - following official docs exactly
-    function resizeCanvas() {
-      if (!canvas) return;
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
-
-      // Use offsetWidth/offsetHeight as per official docs
-      canvas.width = canvas.offsetWidth * ratio;
-      canvas.height = canvas.offsetHeight * ratio;
-      canvas.getContext("2d")!.scale(ratio, ratio);
-
-      // Clear and reinitialize SignaturePad
-      if (signaturePadRef.current) {
-        signaturePadRef.current.clear();
-      }
-
-      signaturePadRef.current = new SignaturePad(canvas, {
-        minWidth: 2,
-        maxWidth: 4,
-        throttle: 16,  // Recommended for mobile
-        penColor: '#000',
-      });
-    }
-
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    return () => {
-      window.removeEventListener('resize', resizeCanvas);
-      if (signaturePadRef.current) {
-        signaturePadRef.current.off();
-      }
-    };
-  }, []);
-
   const clearCanvas = () => {
-    if (signaturePadRef.current) {
-      signaturePadRef.current.clear();
+    if (sigCanvas.current) {
+      sigCanvas.current.clear();
     }
     setShowAnswer(false);
   };
@@ -151,10 +104,19 @@ export default function WritingSection() {
             )}
 
             {/* Canvas */}
-            <div className="flex justify-center" style={{ touchAction: 'none' }}>
-              <div className="border-4 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white" style={{ touchAction: 'none' }}>
-                <canvas
-                  ref={canvasRef}
+            <div className="flex justify-center">
+              <div className="border-4 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white">
+                <SignatureCanvas
+                  ref={sigCanvas}
+                  canvasProps={{
+                    width: 400,
+                    height: 400,
+                    className: 'signature-canvas',
+                    style: { width: '100%', maxWidth: '400px', height: 'auto', touchAction: 'none' }
+                  }}
+                  minWidth={2}
+                  maxWidth={6}
+                  penColor="#000"
                 />
               </div>
             </div>
