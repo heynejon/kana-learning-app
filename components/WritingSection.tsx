@@ -109,8 +109,8 @@ export default function WritingSection() {
                 <SignatureCanvas
                   ref={sigCanvas}
                   canvasProps={{
-                    width: 300,
-                    height: 300,
+                    width: 350,
+                    height: 200,
                     className: 'signature-canvas',
                     style: { display: 'block', touchAction: 'none' }
                   }}
