@@ -33,24 +33,26 @@ export default function WritingSection() {
       // Store current drawing data if it exists
       const currentData = signaturePadRef.current?.toData();
 
+      // Setting canvas width/height clears it and removes event listeners
       canvas.width = size;
       canvas.height = size;
 
-      // Reinitialize SignaturePad after resize
+      // Always recreate SignaturePad after canvas resize
+      // (canvas resize destroys event listeners)
       if (signaturePadRef.current) {
-        signaturePadRef.current.clear();
-      } else {
-        signaturePadRef.current = new SignaturePad(canvas, {
-          minWidth: 2,
-          maxWidth: 6,
-          penColor: '#000',
-          velocityFilterWeight: 0.7,
-          throttle: 0,
-        });
+        signaturePadRef.current.off(); // Remove old event listeners
       }
 
+      signaturePadRef.current = new SignaturePad(canvas, {
+        minWidth: 2,
+        maxWidth: 6,
+        penColor: '#000',
+        velocityFilterWeight: 0.7,
+        throttle: 0,
+      });
+
       // Restore drawing data if it existed
-      if (currentData) {
+      if (currentData && currentData.length > 0) {
         signaturePadRef.current.fromData(currentData);
       }
     };
