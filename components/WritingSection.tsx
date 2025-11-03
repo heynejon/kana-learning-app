@@ -24,6 +24,7 @@ export default function WritingSection() {
 
     // Function to resize canvas and reinitialize SignaturePad
     function resizeCanvas() {
+      if (!canvas) return;
       const ratio = Math.max(window.devicePixelRatio || 1, 1);
       const container = canvas.parentElement;
       if (!container) return;
