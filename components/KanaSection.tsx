@@ -14,6 +14,8 @@ export default function KanaSection() {
     message: '',
   });
   const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [masteryCount, setMasteryCount] = useState<Map<string, number>>(new Map());
+  const [mastered, setMastered] = useState<Set<string>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -26,8 +28,13 @@ export default function KanaSection() {
       timeoutRef.current = null;
     }
 
+    // Reset mastery tracking when switching types
+    setMasteryCount(new Map());
+    setMastered(new Set());
+    setScore({ correct: 0, total: 0 });
+
     const types: KanaType[] = selectedType === 'mix' ? ['hiragana', 'katakana'] : [selectedType];
-    setCurrentKana(getRandomKana(types));
+    setCurrentKana(getRandomKana(types, []));
     setUserInput('');
     setFeedback({ type: null, message: '' });
 
@@ -45,7 +52,10 @@ export default function KanaSection() {
     }
 
     const types: KanaType[] = selectedType === 'mix' ? ['hiragana', 'katakana'] : [selectedType];
-    setCurrentKana(getRandomKana(types));
+    const excludeList = Array.from(mastered);
+    const nextKana = getRandomKana(types, excludeList);
+
+    setCurrentKana(nextKana);
     setUserInput('');
     setFeedback({ type: null, message: '' });
 
@@ -100,10 +110,25 @@ export default function KanaSection() {
     }));
 
     if (isCorrect) {
-      setFeedback({
-        type: 'correct',
-        message: 'Correct!',
-      });
+      // Track mastery progress
+      const currentCount = masteryCount.get(currentKana.char) || 0;
+      const newCount = currentCount + 1;
+
+      setMasteryCount(new Map(masteryCount.set(currentKana.char, newCount)));
+
+      // Mark as mastered if reached 3 correct answers
+      if (newCount >= 3) {
+        setMastered(new Set(mastered.add(currentKana.char)));
+        setFeedback({
+          type: 'correct',
+          message: `Correct! 🎉 You've mastered ${currentKana.char}!`,
+        });
+      } else {
+        setFeedback({
+          type: 'correct',
+          message: `Correct! (${newCount}/3 to master)`,
+        });
+      }
     } else {
       setFeedback({
         type: 'incorrect',
@@ -162,7 +187,7 @@ export default function KanaSection() {
             </div>
           </div>
 
-          {/* Score */}
+          {/* Score and Mastered */}
           <div className="md:ml-4 md:min-w-[120px]">
             <div className="text-center">
               <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Score</p>
@@ -174,6 +199,9 @@ export default function KanaSection() {
                   </span>
                 )}
               </p>
+              <p className="text-xs md:text-sm text-green-600 dark:text-green-400 mt-1">
+                Mastered: {mastered.size}
+              </p>
             </div>
           </div>
         </div>
@@ -181,7 +209,29 @@ export default function KanaSection() {
 
       {/* Main Card */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-8">
-        {currentKana ? (
+        {!currentKana ? (
+          <div className="text-center py-8">
+            <div className="text-6xl mb-4">🎉</div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Congratulations!
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              You've mastered all {selectedType === 'mix' ? 'hiragana and katakana' : selectedType} characters!
+            </p>
+            <button
+              onClick={() => {
+                setMasteryCount(new Map());
+                setMastered(new Set());
+                setScore({ correct: 0, total: 0 });
+                const types: KanaType[] = selectedType === 'mix' ? ['hiragana', 'katakana'] : [selectedType];
+                setCurrentKana(getRandomKana(types, []));
+              }}
+              className="bg-[#BC002D] hover:bg-[#a3002a] text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            >
+              Start Over
+            </button>
+          </div>
+        ) : (
           <div className="space-y-2 md:space-y-6">
             {/* Kana Display */}
             <div className="text-center">
@@ -266,10 +316,6 @@ export default function KanaSection() {
                 )}
               </div>
             </form>
-          </div>
-        ) : (
-          <div className="text-center text-gray-500">
-            Please select at least one character type
           </div>
         )}
       </div>

@@ -194,7 +194,7 @@ export const kanaData = {
   all: [...hiragana, ...katakana],
 };
 
-export function getRandomKana(types: KanaType[]): KanaChar {
+export function getRandomKana(types: KanaType[], excludeChars: string[] = []): KanaChar | null {
   let pool: KanaChar[] = [];
 
   if (types.includes('hiragana')) {
@@ -204,6 +204,14 @@ export function getRandomKana(types: KanaType[]): KanaChar {
     pool = [...pool, ...katakana];
   }
 
-  const randomIndex = Math.floor(Math.random() * pool.length);
-  return pool[randomIndex];
+  // Filter out excluded characters
+  const availablePool = pool.filter(kana => !excludeChars.includes(kana.char));
+
+  // Return null if no kana available
+  if (availablePool.length === 0) {
+    return null;
+  }
+
+  const randomIndex = Math.floor(Math.random() * availablePool.length);
+  return availablePool[randomIndex];
 }
