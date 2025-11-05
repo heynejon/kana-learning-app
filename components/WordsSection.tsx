@@ -158,6 +158,22 @@ export default function WordsSection() {
     }
   }, []);
 
+  // Normalize romanization for flexible matching
+  const normalizeRomanji = (text: string): string => {
+    return text
+      .toLowerCase()
+      .replace(/['\s-]/g, '') // Remove apostrophes, spaces, and hyphens
+      .replace(/ō/g, 'o')      // Replace macrons
+      .replace(/ū/g, 'u')
+      .replace(/ā/g, 'a')
+      .replace(/ē/g, 'e')
+      .replace(/ī/g, 'i')
+      .replace(/ou/g, 'o')     // Handle long vowel variations
+      .replace(/oo/g, 'o')
+      .replace(/uu/g, 'u')
+      .replace(/ei/g, 'e');
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentWord || !userInput.trim()) return;
@@ -170,10 +186,15 @@ export default function WordsSection() {
     const userAsKana = wanakana.toHiragana(userRomanji);
     const correctAsHiragana = wanakana.toHiragana(currentWord.kana);
 
+    // Flexible matching: normalize both strings and compare
+    const normalizedCorrect = normalizeRomanji(correctRomanji);
+    const normalizedUser = normalizeRomanji(userRomanji);
+
     const isCorrect =
-      userRomanji === correctRomanji ||
-      userAsKana === correctAsHiragana ||
-      userInput.trim() === currentWord.kana;
+      userRomanji === correctRomanji ||              // Exact match
+      normalizedUser === normalizedCorrect ||        // Normalized match (handles variations)
+      userAsKana === correctAsHiragana ||            // Kana input match
+      userInput.trim() === currentWord.kana;         // Direct kana match
 
     setScore((prev) => ({
       correct: prev.correct + (isCorrect ? 1 : 0),
