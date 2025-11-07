@@ -2,126 +2,61 @@
 
 import { useState, useEffect, useRef } from 'react';
 import * as wanakana from 'wanakana';
+import { getRandomWord, Word } from '@/lib/wordData';
 
 type WordType = 'hiragana' | 'katakana' | 'mix';
 
-interface WordData {
-  kana: string;
-  kanji: string | null;
-  meanings: string;
-  type: string;
-}
-
 export default function WordsSection() {
   const [selectedType, setSelectedType] = useState<WordType>('hiragana');
-  const [currentWord, setCurrentWord] = useState<WordData | null>(null);
-  const [nextWord, setNextWord] = useState<WordData | null>(null);
+  const [currentWord, setCurrentWord] = useState<Word | null>(null);
   const [userInput, setUserInput] = useState('');
   const [feedback, setFeedback] = useState<{ type: 'correct' | 'incorrect' | null; message: string }>({
     type: null,
     message: '',
   });
   const [score, setScore] = useState({ correct: 0, total: 0 });
-  const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const initializingRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Helper function to fetch a single word
-  const fetchWord = async (type: WordType): Promise<WordData | null> => {
-    try {
-      const response = await fetch(`/api/words?type=${type}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch word');
-      }
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Error fetching word:', error);
-      return null;
-    }
-  };
-
-  // Initialize with two words
-  const initializeWords = async () => {
-    // Prevent multiple simultaneous initializations (React Strict Mode issue)
-    if (initializingRef.current) {
-      return;
-    }
-
-    initializingRef.current = true;
-
+  // Initialize with a random word
+  useEffect(() => {
     // Clear any existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
 
-    setIsLoading(true);
+    // Reset score when switching types
+    setScore({ correct: 0, total: 0 });
+
+    // Get a random word from the client-side database
+    setCurrentWord(getRandomWord(selectedType));
     setUserInput('');
     setFeedback({ type: null, message: '' });
 
-    try {
-      // Fetch two words in parallel
-      const [first, second] = await Promise.all([
-        fetchWord(selectedType),
-        fetchWord(selectedType),
-      ]);
-
-      if (first) {
-        setCurrentWord(first);
-        setNextWord(second);
-        // Auto-focus the input after word loads - multiple attempts for mobile
-        setTimeout(() => inputRef.current?.focus(), 100);
-        setTimeout(() => inputRef.current?.focus(), 200);
-        setTimeout(() => inputRef.current?.focus(), 350);
-      } else {
-        // Error: set currentWord to null to show retry button
-        setCurrentWord(null);
-        setNextWord(null);
-      }
-    } catch (error) {
-      console.error('Error initializing words:', error);
-      // Error: set currentWord to null to show retry button
-      setCurrentWord(null);
-      setNextWord(null);
-    } finally {
-      setIsLoading(false);
-      initializingRef.current = false;
-    }
-  };
+    // Auto-focus the input - multiple attempts for mobile
+    setTimeout(() => inputRef.current?.focus(), 100);
+    setTimeout(() => inputRef.current?.focus(), 200);
+    setTimeout(() => inputRef.current?.focus(), 350);
+  }, [selectedType]);
 
   // Handle advancing to next word
-  const handleNext = async () => {
+  const handleNext = () => {
     // Clear any existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
 
-    if (nextWord) {
-      // Immediately show the pre-loaded word
-      setCurrentWord(nextWord);
-      setUserInput('');
-      setFeedback({ type: null, message: '' });
+    // Get a new random word
+    setCurrentWord(getRandomWord(selectedType));
+    setUserInput('');
+    setFeedback({ type: null, message: '' });
 
-      // Re-focus after state updates complete
-      setTimeout(() => inputRef.current?.focus(), 50);
-
-      // Fetch the next word in the background
-      const newNext = await fetchWord(selectedType);
-      setNextWord(newNext);
-    } else {
-      // Fallback: fetch directly if no pre-loaded word
-      initializeWords();
-    }
+    // Re-focus after state updates complete
+    setTimeout(() => inputRef.current?.focus(), 50);
   };
-
-  // Fetch word on mount and when type changes
-  useEffect(() => {
-    initializeWords();
-  }, [selectedType]);
 
   // Handle Enter key press to advance after feedback
   useEffect(() => {
@@ -283,12 +218,7 @@ export default function WordsSection() {
 
       {/* Main Card */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-8">
-        {isLoading ? (
-          <div className="text-center py-8 md:py-12">
-            <div className="animate-spin rounded-full h-10 w-10 md:h-12 md:w-12 border-b-2 border-[#BC002D] mx-auto"></div>
-            <p className="mt-3 md:mt-4 text-sm md:text-base text-gray-600 dark:text-gray-400">Loading word...</p>
-          </div>
-        ) : currentWord && !isLoading ? (
+        {currentWord ? (
           <div className="space-y-2 md:space-y-6">
             {/* Word Display */}
             <div className="text-center">
@@ -342,7 +272,7 @@ export default function WordsSection() {
               {feedback.type !== null && (
                 <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-2.5 md:p-3">
                   <p className="text-xs md:text-sm font-medium text-blue-900 dark:text-blue-200">
-                    Meaning: {currentWord.meanings}
+                    Meaning: {currentWord.meaning}
                   </p>
                 </div>
               )}
@@ -383,19 +313,7 @@ export default function WordsSection() {
               </div>
             </form>
           </div>
-        ) : (
-          <div className="text-center py-8">
-            <div className="text-red-500 text-sm md:text-base mb-4">
-              Failed to load word from Jisho API
-            </div>
-            <button
-              onClick={initializeWords}
-              className="bg-[#BC002D] hover:bg-[#a3002a] text-white font-semibold py-2.5 md:py-3 px-6 md:px-8 rounded-lg transition-colors text-sm md:text-base"
-            >
-              Retry
-            </button>
-          </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
