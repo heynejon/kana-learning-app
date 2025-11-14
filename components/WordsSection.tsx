@@ -2,13 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react';
 import * as wanakana from 'wanakana';
-import { getRandomWord, Word } from '@/lib/wordData';
+import { hiraganaWords, katakanaWords, Word } from '@/lib/wordData';
 
 type WordType = 'hiragana' | 'katakana' | 'mix';
 
 export default function WordsSection() {
   const [selectedType, setSelectedType] = useState<WordType>('hiragana');
   const [currentWord, setCurrentWord] = useState<Word | null>(null);
+  const [remainingWords, setRemainingWords] = useState<Word[]>([]);
+  const [completedWords, setCompletedWords] = useState<Set<string>>(new Set());
   const [userInput, setUserInput] = useState('');
   const [feedback, setFeedback] = useState<{ type: 'correct' | 'incorrect' | null; message: string }>({
     type: null,
@@ -19,7 +21,7 @@ export default function WordsSection() {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Initialize with a random word
+  // Initialize word rotation when type changes
   useEffect(() => {
     // Clear any existing timeout
     if (timeoutRef.current) {
@@ -27,11 +29,26 @@ export default function WordsSection() {
       timeoutRef.current = null;
     }
 
-    // Reset score when switching types
+    // Reset score and tracking when switching types
     setScore({ correct: 0, total: 0 });
+    setCompletedWords(new Set());
 
-    // Get a random word from the client-side database
-    setCurrentWord(getRandomWord(selectedType));
+    // Build the word pool based on selected type
+    let wordPool: Word[] = [];
+    if (selectedType === 'hiragana') {
+      wordPool = [...hiraganaWords];
+    } else if (selectedType === 'katakana') {
+      wordPool = [...katakanaWords];
+    } else {
+      wordPool = [...hiraganaWords, ...katakanaWords];
+    }
+
+    // Initialize remaining words with full pool
+    setRemainingWords(wordPool);
+
+    // Select first random word from the pool
+    const randomIndex = Math.floor(Math.random() * wordPool.length);
+    setCurrentWord(wordPool[randomIndex]);
     setUserInput('');
     setFeedback({ type: null, message: '' });
 
@@ -49,8 +66,26 @@ export default function WordsSection() {
       timeoutRef.current = null;
     }
 
-    // Get a new random word
-    setCurrentWord(getRandomWord(selectedType));
+    // Check if we need to reset the rotation (all words completed)
+    let wordsToUse = remainingWords;
+    if (remainingWords.length === 0) {
+      // Reset: rebuild the full word pool
+      let wordPool: Word[] = [];
+      if (selectedType === 'hiragana') {
+        wordPool = [...hiraganaWords];
+      } else if (selectedType === 'katakana') {
+        wordPool = [...katakanaWords];
+      } else {
+        wordPool = [...hiraganaWords, ...katakanaWords];
+      }
+      setRemainingWords(wordPool);
+      setCompletedWords(new Set());
+      wordsToUse = wordPool;
+    }
+
+    // Select a random word from remaining words
+    const randomIndex = Math.floor(Math.random() * wordsToUse.length);
+    setCurrentWord(wordsToUse[randomIndex]);
     setUserInput('');
     setFeedback({ type: null, message: '' });
 
@@ -137,11 +172,16 @@ export default function WordsSection() {
     }));
 
     if (isCorrect) {
+      // Remove word from rotation - it won't appear again until reset
+      setCompletedWords(new Set(completedWords.add(currentWord.kana)));
+      setRemainingWords(remainingWords.filter(word => word.kana !== currentWord.kana));
+
       setFeedback({
         type: 'correct',
         message: `Correct! "${currentWord.kana}" = "${correctRomanji}"`,
       });
     } else {
+      // Word stays in rotation - can appear again
       setFeedback({
         type: 'incorrect',
         message: `Incorrect. "${currentWord.kana}" = "${correctRomanji}"`,
