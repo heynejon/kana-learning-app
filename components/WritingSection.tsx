@@ -36,7 +36,7 @@ export default function WritingSection() {
   return (
     <div className="space-y-6">
       {/* Mode Toggle */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-2">
         <div className="flex gap-3">
           <button
             onClick={() => {
@@ -158,19 +158,6 @@ export default function WritingSection() {
                   Identify
                 </button>
               )}
-            </div>
-
-            {/* Instructions */}
-            <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <p className="text-sm text-gray-700 dark:text-gray-300 font-medium mb-2">
-                Drawing Tips:
-              </p>
-              <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1 list-disc list-inside">
-                <li>Draw with smooth, confident strokes</li>
-                <li>Follow the correct stroke order when possible</li>
-                <li>Keep the character centered in the canvas</li>
-                <li>Use the "Clear" button to start over</li>
-              </ul>
             </div>
           </div>
         )}
