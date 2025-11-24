@@ -34,7 +34,7 @@ export default function WritingSection() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2 md:space-y-6">
       {/* Mode Toggle */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-2">
         <div className="flex gap-3">
