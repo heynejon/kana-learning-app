@@ -201,23 +201,6 @@ describe('WordsSection', () => {
       });
     });
 
-    it('should have Skip button before submission', () => {
-      render(<WordsSection />);
-
-      expect(screen.getByRole('button', { name: /skip/i })).toBeInTheDocument();
-    });
-
-    it('should show new word when Skip is clicked', async () => {
-      const user = userEvent.setup();
-      render(<WordsSection />);
-
-      await user.click(screen.getByRole('button', { name: /skip/i }));
-
-      await waitFor(() => {
-        // Should still show a word
-        expect(screen.getByText(/[あいう]/)).toBeInTheDocument();
-      });
-    });
   });
 
   describe('Flexible Romanization Matching', () => {

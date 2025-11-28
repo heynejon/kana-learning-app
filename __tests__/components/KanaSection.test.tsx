@@ -11,7 +11,6 @@ describe('KanaSection', () => {
     it('should render the mode selection screen initially', () => {
       render(<KanaSection />);
 
-      expect(screen.getByText('Choose Practice Mode')).toBeInTheDocument();
       expect(screen.getByText('Quiz')).toBeInTheDocument();
       expect(screen.getByText('Practice All')).toBeInTheDocument();
       expect(screen.getByText('Practice Selected')).toBeInTheDocument();
@@ -20,19 +19,28 @@ describe('KanaSection', () => {
     it('should show Quiz mode description', () => {
       render(<KanaSection />);
 
-      expect(screen.getByText(/Master all characters. 3 correct answers per character/i)).toBeInTheDocument();
+      expect(screen.getByText(/Master all characters/i)).toBeInTheDocument();
     });
 
     it('should show Practice All mode description', () => {
       render(<KanaSection />);
 
-      expect(screen.getByText(/Endless practice with all characters/i)).toBeInTheDocument();
+      expect(screen.getByText(/Endless practice, all kana/i)).toBeInTheDocument();
     });
 
     it('should show Practice Selected mode description', () => {
       render(<KanaSection />);
 
-      expect(screen.getByText(/Pick specific characters to practice/i)).toBeInTheDocument();
+      expect(screen.getByText(/Choose characters to focus on/i)).toBeInTheDocument();
+    });
+
+    it('should show Practice All first, then Practice Selected, then Quiz', () => {
+      render(<KanaSection />);
+
+      const buttons = screen.getAllByRole('button');
+      expect(buttons[0]).toHaveTextContent('Practice All');
+      expect(buttons[1]).toHaveTextContent('Practice Selected');
+      expect(buttons[2]).toHaveTextContent('Quiz');
     });
   });
 
@@ -123,7 +131,9 @@ describe('KanaSection', () => {
       await user.click(screen.getByText('← Back'));
 
       await waitFor(() => {
-        expect(screen.getByText('Choose Practice Mode')).toBeInTheDocument();
+        expect(screen.getByText('Practice All')).toBeInTheDocument();
+        expect(screen.getByText('Practice Selected')).toBeInTheDocument();
+        expect(screen.getByText('Quiz')).toBeInTheDocument();
       });
     });
   });
@@ -192,7 +202,9 @@ describe('KanaSection', () => {
       await user.click(screen.getByText('← Back'));
 
       await waitFor(() => {
-        expect(screen.getByText('Choose Practice Mode')).toBeInTheDocument();
+        expect(screen.getByText('Practice All')).toBeInTheDocument();
+        expect(screen.getByText('Practice Selected')).toBeInTheDocument();
+        expect(screen.getByText('Quiz')).toBeInTheDocument();
       });
     });
   });
@@ -331,12 +343,12 @@ describe('KanaSection', () => {
       await user.click(screen.getByRole('button', { name: /start practice/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/back to selection/i)).toBeInTheDocument();
+        expect(screen.getByText('← Back')).toBeInTheDocument();
         expect(screen.getByText(/practicing: 1 character$/i)).toBeInTheDocument();
       });
     });
 
-    it('should go back to chart selection when Back to Selection clicked', async () => {
+    it('should go back to chart selection when Back clicked during drilling', async () => {
       const user = userEvent.setup();
       render(<KanaSection />);
 
@@ -347,11 +359,11 @@ describe('KanaSection', () => {
       await user.click(screen.getByRole('button', { name: /start practice/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/back to selection/i)).toBeInTheDocument();
+        expect(screen.getByText('← Back')).toBeInTheDocument();
       });
 
       // Go back
-      await user.click(screen.getByText(/back to selection/i));
+      await user.click(screen.getByText('← Back'));
 
       await waitFor(() => {
         expect(screen.getByText(/tap characters to select/i)).toBeInTheDocument();
@@ -368,7 +380,9 @@ describe('KanaSection', () => {
       await user.click(screen.getByText('← Back'));
 
       await waitFor(() => {
-        expect(screen.getByText('Choose Practice Mode')).toBeInTheDocument();
+        expect(screen.getByText('Practice All')).toBeInTheDocument();
+        expect(screen.getByText('Practice Selected')).toBeInTheDocument();
+        expect(screen.getByText('Quiz')).toBeInTheDocument();
       });
     });
   });
@@ -498,56 +512,27 @@ describe('KanaSection', () => {
       await user.click(nextButton);
 
       await waitFor(() => {
-        expect(input.value).toBe('');
-        expect(screen.getByText(/[ぁ-ん]/)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('Skip Functionality', () => {
-    const enterQuizMode = async (user: ReturnType<typeof userEvent.setup>) => {
-      await user.click(screen.getByRole('button', { name: /quiz/i }));
-      await waitFor(() => {
-        expect(screen.getByText(/hiragana/i)).toBeInTheDocument();
-      });
-    };
-
-    it('should have Skip button available before submission', async () => {
-      const user = userEvent.setup();
-      render(<KanaSection />);
-
-      await enterQuizMode(user);
-
-      expect(screen.getByRole('button', { name: /skip/i })).toBeInTheDocument();
-    });
-
-    it('should show new kana when Skip is clicked', async () => {
-      const user = userEvent.setup();
-      render(<KanaSection />);
-
-      await enterQuizMode(user);
-
-      await user.click(screen.getByRole('button', { name: /skip/i }));
-
-      await waitFor(() => {
-        // Should still show a kana (might be same due to randomness)
+        expect(screen.getByPlaceholderText(/type the romanji/i)).toHaveValue('');
         expect(screen.getByText(/[ぁ-ん]/)).toBeInTheDocument();
       });
     });
 
-    it('should not affect score when skipping', async () => {
+    it('should show input and submit button inline', async () => {
       const user = userEvent.setup();
       render(<KanaSection />);
 
       await enterQuizMode(user);
 
-      expect(screen.getByText(/0 \/ 0/)).toBeInTheDocument();
+      // Input and submit should be in the same flex container
+      const input = screen.getByPlaceholderText(/type the romanji/i);
+      const submitButton = screen.getByRole('button', { name: /submit/i });
 
-      await user.click(screen.getByRole('button', { name: /skip/i }));
+      // Both should exist and be visible
+      expect(input).toBeInTheDocument();
+      expect(submitButton).toBeInTheDocument();
 
-      await waitFor(() => {
-        expect(screen.getByText(/0 \/ 0/)).toBeInTheDocument();
-      });
+      // They should share the same parent with flex layout
+      expect(input.parentElement).toBe(submitButton.parentElement);
     });
   });
 

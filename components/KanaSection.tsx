@@ -29,6 +29,7 @@ export default function KanaSection() {
   const inputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [mistakes, setMistakes] = useState<Map<string, number>>(new Map());
 
   // Reset practice state when entering a practice mode
   const initializePractice = (practiceMode: 'quiz' | 'practiceAll' | 'practiceSelected') => {
@@ -42,6 +43,7 @@ export default function KanaSection() {
     if (practiceMode === 'quiz') {
       setMasteryCount(new Map());
       setMastered(new Set());
+      setMistakes(new Map());
       setScore({ correct: 0, total: 0 });
       const types: KanaType[] = selectedType === 'mix' ? ['hiragana', 'katakana'] : [selectedType];
       setCurrentKana(getRandomKana(types, []));
@@ -50,10 +52,13 @@ export default function KanaSection() {
       setCurrentKana(getRandomKana(types, []));
     }
 
-    // Auto-focus the input - multiple attempts for mobile
-    setTimeout(() => inputRef.current?.focus(), 100);
-    setTimeout(() => inputRef.current?.focus(), 200);
-    setTimeout(() => inputRef.current?.focus(), 350);
+    // Auto-focus the input and scroll container into view
+    setTimeout(() => {
+      inputRef.current?.focus();
+      if (containerRef.current?.scrollIntoView) {
+        containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   // Handle type change for quiz and practice all modes
@@ -77,8 +82,6 @@ export default function KanaSection() {
     setFeedback({ type: null, message: '' });
 
     setTimeout(() => inputRef.current?.focus(), 100);
-    setTimeout(() => inputRef.current?.focus(), 200);
-    setTimeout(() => inputRef.current?.focus(), 350);
   }, [selectedType, mode]);
 
   // Handle advancing to next kana
@@ -132,26 +135,6 @@ export default function KanaSection() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [feedback.type, mode, selectedType, mastered, selectedChars, isDrilling]);
 
-  // Handle mobile keyboard visibility - scroll input into view
-  useEffect(() => {
-    const handleViewportResize = () => {
-      if (inputRef.current && document.activeElement === inputRef.current) {
-        setTimeout(() => {
-          inputRef.current?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-          });
-        }, 300);
-      }
-    };
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleViewportResize);
-      return () => {
-        window.visualViewport?.removeEventListener('resize', handleViewportResize);
-      };
-    }
-  }, []);
 
   // Submit handler for quiz mode (with mastery tracking)
   const handleQuizSubmit = (e: React.FormEvent) => {
@@ -184,6 +167,10 @@ export default function KanaSection() {
         });
       }
     } else {
+      // Track mistakes
+      const currentMistakes = mistakes.get(currentKana.char) || 0;
+      setMistakes(new Map(mistakes.set(currentKana.char, currentMistakes + 1)));
+
       setFeedback({
         type: 'incorrect',
         message: `Incorrect. The correct answer is "${currentKana.romanji}"`,
@@ -217,10 +204,6 @@ export default function KanaSection() {
     timeoutRef.current = setTimeout(() => {
       handleNext();
     }, 10000);
-  };
-
-  const handleSkip = () => {
-    handleNext();
   };
 
   // Go back to mode selection
@@ -268,9 +251,13 @@ export default function KanaSection() {
     setUserInput('');
     setFeedback({ type: null, message: '' });
 
-    setTimeout(() => inputRef.current?.focus(), 100);
-    setTimeout(() => inputRef.current?.focus(), 200);
-    setTimeout(() => inputRef.current?.focus(), 350);
+    // Auto-focus the input and scroll container into view
+    setTimeout(() => {
+      inputRef.current?.focus();
+      if (containerRef.current?.scrollIntoView) {
+        containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   };
 
   // Organize kana into rows for chart display
@@ -301,23 +288,7 @@ export default function KanaSection() {
   const renderModeSelection = () => (
     <div className="space-y-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 md:p-8">
-        <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white text-center mb-6">
-          Choose Practice Mode
-        </h2>
         <div className="space-y-3">
-          <button
-            onClick={() => {
-              setMode('quiz');
-              initializePractice('quiz');
-            }}
-            className="w-full p-4 md:p-6 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors text-left"
-          >
-            <div className="font-semibold text-lg text-gray-900 dark:text-white">Quiz</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Master all characters. 3 correct answers per character to complete.
-            </div>
-          </button>
-
           <button
             onClick={() => {
               setMode('practiceAll');
@@ -327,7 +298,7 @@ export default function KanaSection() {
           >
             <div className="font-semibold text-lg text-gray-900 dark:text-white">Practice All</div>
             <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Endless practice with all characters. No tracking, just drilling.
+              Endless practice, all kana
             </div>
           </button>
 
@@ -340,7 +311,20 @@ export default function KanaSection() {
           >
             <div className="font-semibold text-lg text-gray-900 dark:text-white">Practice Selected</div>
             <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Pick specific characters to practice. Focus on the ones you need.
+              Choose characters to focus on
+            </div>
+          </button>
+
+          <button
+            onClick={() => {
+              setMode('quiz');
+              initializePractice('quiz');
+            }}
+            className="w-full p-4 md:p-6 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors text-left"
+          >
+            <div className="font-semibold text-lg text-gray-900 dark:text-white">Quiz</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              Master all characters
             </div>
           </button>
         </div>
@@ -397,90 +381,80 @@ export default function KanaSection() {
   );
 
   // Render practice input UI (shared between all practice modes)
-  const renderPracticeUI = (onSubmit: (e: React.FormEvent) => void) => (
-    <div className="space-y-2 md:space-y-6">
-      <div className="text-center">
-        <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-2">
-          What sound does this make?
-        </p>
-        <div className="text-6xl md:text-9xl font-bold text-gray-900 dark:text-white my-4 md:my-8">
-          {currentKana?.char}
-        </div>
-      </div>
+  const renderPracticeUI = (onSubmit: (e: React.FormEvent) => void) => {
+    const hasFeedback = feedback.type !== null;
 
-      <form onSubmit={onSubmit} className="space-y-3 md:space-y-4">
-        <div>
-          <label htmlFor="answer" className="sr-only">
-            Your answer
-          </label>
-          <input
-            ref={inputRef}
-            id="answer"
-            type="text"
-            value={userInput}
-            onChange={(e) => {
-              if (feedback.type === null) {
-                setUserInput(e.target.value);
-              }
-            }}
-            placeholder="Type the romanji (e.g., ka, shi, n)"
-            className="w-full px-3 md:px-4 py-2.5 md:py-3 text-base md:text-lg border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#BC002D] focus:border-transparent dark:bg-gray-700 dark:text-white"
-            autoComplete="off"
-            inputMode="text"
-            autoFocus
-          />
-        </div>
+    const handleButtonClick = (e: React.MouseEvent) => {
+      if (hasFeedback) {
+        e.preventDefault();
+        handleNext();
+      }
+      // If no feedback, form will submit naturally
+    };
 
-        {feedback.type && (
-          <div
-            className={`p-3 md:p-4 rounded-lg text-sm md:text-base ${
-              feedback.type === 'correct'
-                ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100'
-                : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100'
-            }`}
-          >
-            {feedback.message}
+    return (
+      <div className="space-y-2 md:space-y-6">
+        <div className="text-center">
+          <div className="text-6xl md:text-9xl font-bold text-gray-900 dark:text-white my-4 md:my-8">
+            {currentKana?.char}
           </div>
-        )}
-
-        <div className="flex gap-2 md:gap-3">
-          {feedback.type === null ? (
-            <>
-              <button
-                type="submit"
-                disabled={!userInput.trim()}
-                className="flex-1 bg-[#BC002D] hover:bg-[#a3002a] disabled:bg-gray-400 text-white font-semibold py-2.5 md:py-3 px-4 md:px-6 rounded-lg transition-colors disabled:cursor-not-allowed text-sm md:text-base"
-              >
-                Submit
-              </button>
-              <button
-                type="button"
-                onClick={handleSkip}
-                className="px-4 md:px-6 py-2.5 md:py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg transition-colors text-sm md:text-base"
-              >
-                Skip
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                inputRef.current?.focus();
-                setTimeout(() => handleNext(), 10);
-              }}
-              className="flex-1 bg-[#BC002D] hover:bg-[#a3002a] text-white font-semibold py-2.5 md:py-3 px-4 md:px-6 rounded-lg transition-colors text-sm md:text-base"
-            >
-              Next (or press Enter)
-            </button>
-          )}
         </div>
-      </form>
-    </div>
-  );
+
+        <form onSubmit={onSubmit} className="space-y-3 md:space-y-4">
+          {/* Input row - always visible */}
+          <div className="flex gap-2">
+            <label htmlFor="answer" className="sr-only">
+              Your answer
+            </label>
+            <input
+              ref={inputRef}
+              id="answer"
+              type="text"
+              value={userInput}
+              onChange={(e) => {
+                if (!hasFeedback) {
+                  setUserInput(e.target.value);
+                }
+              }}
+              readOnly={hasFeedback}
+              placeholder="Type the romanji (e.g., ka, shi, n)"
+              className={`flex-1 px-3 md:px-4 py-2.5 md:py-3 text-base md:text-lg border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#BC002D] focus:border-transparent dark:bg-gray-700 dark:text-white ${hasFeedback ? 'bg-gray-100 dark:bg-gray-600' : ''}`}
+              autoComplete="off"
+              inputMode="text"
+              autoFocus
+            />
+            <button
+              type={hasFeedback ? 'button' : 'submit'}
+              onClick={handleButtonClick}
+              onMouseDown={(e) => e.preventDefault()}
+              onTouchStart={(e) => e.preventDefault()}
+              disabled={!hasFeedback && !userInput.trim()}
+              className="bg-[#BC002D] hover:bg-[#a3002a] disabled:bg-gray-400 text-white font-semibold py-2.5 md:py-3 px-4 rounded-lg transition-colors disabled:cursor-not-allowed text-sm md:text-base min-w-[70px]"
+            >
+              {hasFeedback ? 'Next' : 'Submit'}
+            </button>
+          </div>
+
+          {/* Feedback */}
+          {hasFeedback && (
+            <div
+              className={`p-3 md:p-4 rounded-lg text-sm md:text-base ${
+                feedback.type === 'correct'
+                  ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100'
+                  : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100'
+              }`}
+            >
+              {feedback.message}
+            </div>
+          )}
+        </form>
+      </div>
+    );
+  };
 
   // Render Quiz mode
   const renderQuizMode = () => (
-    <div className="space-y-2 md:space-y-6" ref={containerRef}>
+    <div ref={containerRef} className="space-y-2 md:space-y-6">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 md:p-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="flex items-center gap-4">
@@ -519,10 +493,36 @@ export default function KanaSection() {
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               You've mastered all {selectedType === 'mix' ? 'hiragana and katakana' : selectedType} characters!
             </p>
+
+            {/* Mistake Report - only show if there were mistakes */}
+            {mistakes.size > 0 && (
+              <div className="mb-6 text-left max-w-xs mx-auto">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">
+                  Mistakes
+                </h3>
+                <div className="bg-red-50 dark:bg-red-900/30 rounded-lg p-3">
+                  {Array.from(mistakes.entries())
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([char, count]) => {
+                      const kanaInfo = [...kanaData.hiragana, ...kanaData.katakana].find(k => k.char === char);
+                      return (
+                        <div key={char} className="flex justify-between items-center py-1 border-b border-red-200 dark:border-red-800 last:border-0">
+                          <span className="text-2xl">{char}</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            {kanaInfo?.romanji} - {count} mistake{count !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+
             <button
               onClick={() => {
                 setMasteryCount(new Map());
                 setMastered(new Set());
+                setMistakes(new Map());
                 setScore({ correct: 0, total: 0 });
                 const types: KanaType[] = selectedType === 'mix' ? ['hiragana', 'katakana'] : [selectedType];
                 setCurrentKana(getRandomKana(types, []));
@@ -541,7 +541,7 @@ export default function KanaSection() {
 
   // Render Practice All mode
   const renderPracticeAllMode = () => (
-    <div className="space-y-2 md:space-y-6" ref={containerRef}>
+    <div ref={containerRef} className="space-y-2 md:space-y-6">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 md:p-4">
         <div className="flex items-center gap-4">
           {renderBackButton(handleBackToSelection)}
@@ -659,10 +659,10 @@ export default function KanaSection() {
 
   // Render Practice Selected - Drilling
   const renderDrilling = () => (
-    <div className="space-y-2 md:space-y-6" ref={containerRef}>
+    <div ref={containerRef} className="space-y-2 md:space-y-6">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 md:p-4">
         <div className="flex items-center justify-between">
-          {renderBackButton(handleBackToChartSelection, '← Back to Selection')}
+          {renderBackButton(handleBackToChartSelection)}
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Practicing: {selectedChars.size} character{selectedChars.size !== 1 ? 's' : ''}
           </p>

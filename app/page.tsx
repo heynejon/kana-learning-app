@@ -71,7 +71,7 @@ export default function Home() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-8 pb-32">
+      <main className="max-w-4xl mx-auto px-4 py-3 pb-32">
         <div className={activeSection === 'sounds' ? 'block' : 'hidden'}>
           <KanaSection />
         </div>

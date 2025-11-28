@@ -52,10 +52,13 @@ export default function WordsSection() {
     setUserInput('');
     setFeedback({ type: null, message: '' });
 
-    // Auto-focus the input - multiple attempts for mobile
-    setTimeout(() => inputRef.current?.focus(), 100);
-    setTimeout(() => inputRef.current?.focus(), 200);
-    setTimeout(() => inputRef.current?.focus(), 350);
+    // Auto-focus the input and scroll container into view
+    setTimeout(() => {
+      inputRef.current?.focus();
+      if (containerRef.current?.scrollIntoView) {
+        containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
   }, [selectedType]);
 
   // Handle advancing to next word
@@ -105,28 +108,6 @@ export default function WordsSection() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [feedback.type, handleNext]);
 
-  // Handle mobile keyboard visibility - scroll input into view
-  useEffect(() => {
-    const handleViewportResize = () => {
-      if (inputRef.current && document.activeElement === inputRef.current) {
-        // Wait for keyboard animation to complete
-        setTimeout(() => {
-          inputRef.current?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-          });
-        }, 300);
-      }
-    };
-
-    // Use visualViewport if available (better for mobile keyboard detection)
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleViewportResize);
-      return () => {
-        window.visualViewport?.removeEventListener('resize', handleViewportResize);
-      };
-    }
-  }, []);
 
   // Normalize romanization for flexible matching
   const normalizeRomanji = (text: string): string => {
@@ -194,12 +175,18 @@ export default function WordsSection() {
     }, 15000);
   };
 
-  const handleSkip = () => {
-    handleNext();
+  const hasFeedback = feedback.type !== null;
+
+  const handleButtonClick = (e: React.MouseEvent) => {
+    if (hasFeedback) {
+      e.preventDefault();
+      handleNext();
+    }
+    // If no feedback, form will submit naturally
   };
 
   return (
-    <div className="space-y-2 md:space-y-6" ref={containerRef}>
+    <div ref={containerRef} className="space-y-2 md:space-y-6">
       {/* Compact Header: Type Toggle + Score (mobile) / Separate (desktop) */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 md:p-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -262,9 +249,6 @@ export default function WordsSection() {
           <div className="space-y-2 md:space-y-6">
             {/* Word Display */}
             <div className="text-center">
-              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-2">
-                Type the romanji for this word:
-              </p>
               <div className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white my-4 md:my-6">
                 {currentWord.kana}
               </div>
@@ -272,7 +256,8 @@ export default function WordsSection() {
 
             {/* Input Form */}
             <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
-              <div>
+              {/* Input row - always visible */}
+              <div className="flex gap-2">
                 <label htmlFor="word-answer" className="sr-only">
                   Your answer
                 </label>
@@ -282,75 +267,50 @@ export default function WordsSection() {
                   type="text"
                   value={userInput}
                   onChange={(e) => {
-                    // Only update if we haven't submitted yet
-                    if (feedback.type === null) {
+                    if (!hasFeedback) {
                       setUserInput(e.target.value);
                     }
                   }}
+                  readOnly={hasFeedback}
                   placeholder="Type the romanji (e.g., neko, inu)"
-                  className="w-full px-3 md:px-4 py-2.5 md:py-3 text-base md:text-lg border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#BC002D] focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className={`flex-1 px-3 md:px-4 py-2.5 md:py-3 text-base md:text-lg border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#BC002D] focus:border-transparent dark:bg-gray-700 dark:text-white ${hasFeedback ? 'bg-gray-100 dark:bg-gray-600' : ''}`}
                   autoComplete="off"
                   inputMode="text"
                   autoFocus
                 />
+                <button
+                  type={hasFeedback ? 'button' : 'submit'}
+                  onClick={handleButtonClick}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onTouchStart={(e) => e.preventDefault()}
+                  disabled={!hasFeedback && !userInput.trim()}
+                  className="bg-[#BC002D] hover:bg-[#a3002a] disabled:bg-gray-400 text-white font-semibold py-2.5 md:py-3 px-4 rounded-lg transition-colors disabled:cursor-not-allowed text-sm md:text-base min-w-[70px]"
+                >
+                  {hasFeedback ? 'Next' : 'Submit'}
+                </button>
               </div>
 
               {/* Feedback */}
-              {feedback.type && (
-                <div
-                  className={`p-3 md:p-4 rounded-lg text-sm md:text-base ${
-                    feedback.type === 'correct'
-                      ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100'
-                      : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100'
-                  }`}
-                >
-                  {feedback.message}
-                </div>
-              )}
-
-              {/* Meaning - shown after feedback */}
-              {feedback.type !== null && (
-                <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-2.5 md:p-3">
-                  <p className="text-xs md:text-sm font-medium text-blue-900 dark:text-blue-200">
-                    Meaning: {currentWord.meaning}
-                  </p>
-                </div>
-              )}
-
-              {/* Buttons */}
-              <div className="flex gap-2 md:gap-3">
-                {feedback.type === null ? (
-                  <>
-                    <button
-                      type="submit"
-                      disabled={!userInput.trim()}
-                      className="flex-1 bg-[#BC002D] hover:bg-[#a3002a] disabled:bg-gray-400 text-white font-semibold py-2.5 md:py-3 px-4 md:px-6 rounded-lg transition-colors disabled:cursor-not-allowed text-sm md:text-base"
-                    >
-                      Submit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSkip}
-                      className="px-4 md:px-6 py-2.5 md:py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg transition-colors text-sm md:text-base"
-                    >
-                      Skip
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      // Focus input first, synchronously during click event
-                      inputRef.current?.focus();
-                      // Small delay to let focus settle, then advance
-                      setTimeout(() => handleNext(), 10);
-                    }}
-                    className="flex-1 bg-[#BC002D] hover:bg-[#a3002a] text-white font-semibold py-2.5 md:py-3 px-4 md:px-6 rounded-lg transition-colors text-sm md:text-base"
+              {hasFeedback && (
+                <>
+                  <div
+                    className={`p-3 md:p-4 rounded-lg text-sm md:text-base ${
+                      feedback.type === 'correct'
+                        ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100'
+                        : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-100'
+                    }`}
                   >
-                    Next (or press Enter)
-                  </button>
-                )}
-              </div>
+                    {feedback.message}
+                  </div>
+
+                  {/* Meaning - shown after feedback */}
+                  <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-2.5 md:p-3">
+                    <p className="text-xs md:text-sm font-medium text-blue-900 dark:text-blue-200">
+                      Meaning: {currentWord.meaning}
+                    </p>
+                  </div>
+                </>
+              )}
             </form>
           </div>
         ) : null}

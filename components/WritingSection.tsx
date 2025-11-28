@@ -73,8 +73,8 @@ export default function WritingSection() {
           <div className="space-y-4">
             {/* Prompt */}
             {mode === 'practice' ? (
-              <div className="text-center mb-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              <div className="text-center mb-2">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
                   Draw the {currentKana.type} for:
                 </p>
                 <div className="text-5xl font-bold text-[#BC002D]">
@@ -125,7 +125,7 @@ export default function WritingSection() {
             <div className="grid grid-cols-2 gap-3 mt-4">
               <button
                 onClick={clearCanvas}
-                className="py-3 px-6 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg transition-colors"
+                className="py-2.5 md:py-3 px-4 md:px-6 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold rounded-lg transition-colors text-sm md:text-base"
               >
                 Clear
               </button>
@@ -134,14 +134,14 @@ export default function WritingSection() {
                   {!showAnswer && (
                     <button
                       onClick={handleShowAnswer}
-                      className="py-3 px-6 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-lg transition-colors"
+                      className="py-2.5 md:py-3 px-4 md:px-6 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-lg transition-colors text-sm md:text-base"
                     >
                       Show Answer
                     </button>
                   )}
                   <button
                     onClick={handleNext}
-                    className={`py-3 px-6 bg-[#BC002D] hover:bg-[#a3002a] text-white font-semibold rounded-lg transition-colors ${
+                    className={`py-2.5 md:py-3 px-4 md:px-6 bg-[#BC002D] hover:bg-[#a3002a] text-white font-semibold rounded-lg transition-colors text-sm md:text-base ${
                       !showAnswer ? 'col-span-2' : ''
                     }`}
                   >
@@ -153,7 +153,7 @@ export default function WritingSection() {
                   onClick={() => {
                     alert('Character recognition will be implemented soon! Keep practicing your strokes.');
                   }}
-                  className="py-3 px-6 bg-[#BC002D] hover:bg-[#a3002a] text-white font-semibold rounded-lg transition-colors"
+                  className="py-2.5 md:py-3 px-4 md:px-6 bg-[#BC002D] hover:bg-[#a3002a] text-white font-semibold rounded-lg transition-colors text-sm md:text-base"
                 >
                   Identify
                 </button>
