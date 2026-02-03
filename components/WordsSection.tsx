@@ -271,6 +271,14 @@ export default function WordsSection() {
                       setUserInput(e.target.value);
                     }
                   }}
+                  onFocus={() => {
+                    // Scroll container into view when keyboard appears
+                    setTimeout(() => {
+                      if (containerRef.current?.scrollIntoView) {
+                        containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }
+                    }, 300);
+                  }}
                   readOnly={hasFeedback}
                   placeholder="Type the romanji (e.g., neko, inu)"
                   className={`flex-1 px-3 md:px-4 py-2.5 md:py-3 text-base md:text-lg border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#BC002D] focus:border-transparent dark:bg-gray-700 dark:text-white ${hasFeedback ? 'bg-gray-100 dark:bg-gray-600' : ''}`}

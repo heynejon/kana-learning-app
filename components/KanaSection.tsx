@@ -260,6 +260,37 @@ export default function KanaSection() {
     }, 100);
   };
 
+  // Start practicing mistake characters from quiz
+  const startPracticeMistakes = () => {
+    if (mistakes.size === 0) return;
+
+    // Set the mistake characters as selected
+    const mistakeChars = new Set(mistakes.keys());
+    setSelectedChars(mistakeChars);
+
+    // Switch to practice selected mode and start drilling
+    setMode('practiceSelected');
+    setIsDrilling(true);
+
+    // Get first kana from mistakes
+    const allKana = [...kanaData.hiragana, ...kanaData.katakana];
+    const pool = allKana.filter(k => mistakeChars.has(k.char));
+    const firstKana = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : null;
+
+    setCurrentKana(firstKana);
+    setUserInput('');
+    setFeedback({ type: null, message: '' });
+    setMistakes(new Map());
+
+    // Auto-focus the input and scroll container into view
+    setTimeout(() => {
+      inputRef.current?.focus();
+      if (containerRef.current?.scrollIntoView) {
+        containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
   // Organize kana into rows for chart display
   const organizeIntoRows = (type: 'hiragana' | 'katakana') => {
     const data = type === 'hiragana' ? kanaData.hiragana : kanaData.katakana;
@@ -515,6 +546,12 @@ export default function KanaSection() {
                       );
                     })}
                 </div>
+                <button
+                  onClick={startPracticeMistakes}
+                  className="w-full mt-3 bg-[#BC002D] hover:bg-[#a3002a] text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm"
+                >
+                  Practice Mistakes
+                </button>
               </div>
             )}
 
