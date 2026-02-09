@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Kana Learning App",
   description: "Learn Japanese Hiragana and Katakana",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Kana",
+  },
 };
 
 export const viewport: Viewport = {
