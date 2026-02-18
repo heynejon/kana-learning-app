@@ -5,17 +5,74 @@ import KanaSection from '@/components/KanaSection';
 import WordsSection from '@/components/WordsSection';
 import WritingSection from '@/components/WritingSection';
 import ChartsSection from '@/components/ChartsSection';
+import MainMenu from '@/components/MainMenu';
+import NumbersSection from '@/components/NumbersSection';
 
+type Screen = 'menu' | 'kana' | 'numbers';
 type Section = 'sounds' | 'words' | 'writing' | 'charts';
 
 export default function Home() {
+  const [currentScreen, setCurrentScreen] = useState<Screen>('menu');
   const [activeSection, setActiveSection] = useState<Section>('sounds');
 
+  const goToMenu = () => setCurrentScreen('menu');
+
+  // Main Menu screen
+  if (currentScreen === 'menu') {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <header className="bg-white dark:bg-gray-800 shadow-sm border-b-2 border-[#BC002D]">
+          <div className="max-w-4xl mx-auto px-4 py-4">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white text-center">
+              かな Learning
+            </h1>
+          </div>
+        </header>
+
+        <main className="max-w-4xl mx-auto px-4 py-6 pb-32">
+          <MainMenu onSelect={(screen) => setCurrentScreen(screen)} />
+        </main>
+      </div>
+    );
+  }
+
+  // Numbers screen
+  if (currentScreen === 'numbers') {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <header className="bg-white dark:bg-gray-800 shadow-sm border-b-2 border-[#BC002D]">
+          <div className="max-w-4xl mx-auto px-4 py-4 relative">
+            <button
+              onClick={goToMenu}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-lg"
+            >
+              ←
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white text-center">
+              Numbers
+            </h1>
+          </div>
+        </header>
+
+        <main className="max-w-4xl mx-auto px-4 py-3 pb-32">
+          <NumbersSection onBack={goToMenu} />
+        </main>
+      </div>
+    );
+  }
+
+  // Kana screen (existing functionality)
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm border-b-2 border-[#BC002D]">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="max-w-4xl mx-auto px-4 py-4 relative">
+          <button
+            onClick={goToMenu}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-lg"
+          >
+            ←
+          </button>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white text-center">
             かな Learning
           </h1>
