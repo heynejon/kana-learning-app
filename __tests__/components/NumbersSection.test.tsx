@@ -4,6 +4,21 @@ import NumbersSection from '@/components/NumbersSection';
 
 const mockOnBack = jest.fn();
 
+// Helper to navigate from mode selection through quiz setup to the quiz
+async function navigateToQuiz(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByText('Quiz'));
+
+  await waitFor(() => {
+    expect(screen.getByText('Start Quiz →')).toBeInTheDocument();
+  });
+
+  await user.click(screen.getByText('Start Quiz →'));
+
+  await waitFor(() => {
+    expect(screen.getByText('Score')).toBeInTheDocument();
+  });
+}
+
 describe('NumbersSection', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -38,7 +53,6 @@ describe('NumbersSection', () => {
       await user.click(screen.getByText('Chart'));
 
       await waitFor(() => {
-        // Should show all 10 kanji
         expect(screen.getByText('一')).toBeInTheDocument();
         expect(screen.getByText('二')).toBeInTheDocument();
         expect(screen.getByText('三')).toBeInTheDocument();
@@ -70,6 +84,18 @@ describe('NumbersSection', () => {
       });
     });
 
+    it('should display romanji in the chart', async () => {
+      const user = userEvent.setup();
+      render(<NumbersSection onBack={mockOnBack} />);
+
+      await user.click(screen.getByText('Chart'));
+
+      await waitFor(() => {
+        expect(screen.getByText('ichi')).toBeInTheDocument();
+        expect(screen.getByText('nana / shichi')).toBeInTheDocument();
+      });
+    });
+
     it('should have a back button that returns to mode selection', async () => {
       const user = userEvent.setup();
       render(<NumbersSection onBack={mockOnBack} />);
@@ -89,69 +115,146 @@ describe('NumbersSection', () => {
     });
   });
 
-  describe('Quiz View', () => {
-    it('should display the quiz when Quiz is clicked', async () => {
+  describe('Quiz Setup', () => {
+    it('should show category selection when Quiz is clicked', async () => {
       const user = userEvent.setup();
       render(<NumbersSection onBack={mockOnBack} />);
 
       await user.click(screen.getByText('Quiz'));
 
       await waitFor(() => {
-        // Should show score
-        expect(screen.getByText('Score')).toBeInTheDocument();
-        expect(screen.getByText('0 / 0')).toBeInTheDocument();
+        expect(screen.getByText('Number (1)')).toBeInTheDocument();
+        expect(screen.getByText('Kanji (一)')).toBeInTheDocument();
+        expect(screen.getByText('Kana (いち)')).toBeInTheDocument();
+        expect(screen.getByText('Romanji (ichi)')).toBeInTheDocument();
+        expect(screen.getByText('Start Quiz →')).toBeInTheDocument();
       });
+    });
+
+    it('should start with all 4 categories selected', async () => {
+      const user = userEvent.setup();
+      render(<NumbersSection onBack={mockOnBack} />);
+
+      await user.click(screen.getByText('Quiz'));
+
+      await waitFor(() => {
+        const numberBtn = screen.getByText('Number (1)');
+        const kanjiBtn = screen.getByText('Kanji (一)');
+        const readingBtn = screen.getByText('Kana (いち)');
+        const romanjiBtn = screen.getByText('Romanji (ichi)');
+
+        expect(numberBtn).toHaveClass('bg-[#BC002D]');
+        expect(kanjiBtn).toHaveClass('bg-[#BC002D]');
+        expect(readingBtn).toHaveClass('bg-[#BC002D]');
+        expect(romanjiBtn).toHaveClass('bg-[#BC002D]');
+      });
+    });
+
+    it('should toggle category selection on click', async () => {
+      const user = userEvent.setup();
+      render(<NumbersSection onBack={mockOnBack} />);
+
+      await user.click(screen.getByText('Quiz'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Kana (いち)')).toHaveClass('bg-[#BC002D]');
+      });
+
+      await user.click(screen.getByText('Kana (いち)'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Kana (いち)')).not.toHaveClass('bg-[#BC002D]');
+      });
+    });
+
+    it('should disable Start Quiz when fewer than 2 categories selected', async () => {
+      const user = userEvent.setup();
+      render(<NumbersSection onBack={mockOnBack} />);
+
+      await user.click(screen.getByText('Quiz'));
+
+      // Deselect 3 categories, leaving only 1
+      await user.click(screen.getByText('Kanji (一)'));
+      await user.click(screen.getByText('Kana (いち)'));
+      await user.click(screen.getByText('Romanji (ichi)'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Start Quiz →')).toBeDisabled();
+      });
+    });
+
+    it('should have a Select All / Deselect All toggle', async () => {
+      const user = userEvent.setup();
+      render(<NumbersSection onBack={mockOnBack} />);
+
+      await user.click(screen.getByText('Quiz'));
+
+      await waitFor(() => {
+        // All selected, so should show Deselect All
+        expect(screen.getByText('Deselect All')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('Deselect All'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Select All')).toBeInTheDocument();
+        expect(screen.getByText('Number (1)')).not.toHaveClass('bg-[#BC002D]');
+      });
+    });
+
+    it('should navigate back to mode selection', async () => {
+      const user = userEvent.setup();
+      render(<NumbersSection onBack={mockOnBack} />);
+
+      await user.click(screen.getByText('Quiz'));
+
+      await waitFor(() => {
+        expect(screen.getByText('← Back')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText('← Back'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Chart')).toBeInTheDocument();
+        expect(screen.getByText('Quiz')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Quiz View', () => {
+    it('should display the quiz after setup', async () => {
+      const user = userEvent.setup();
+      render(<NumbersSection onBack={mockOnBack} />);
+
+      await navigateToQuiz(user);
+
+      expect(screen.getByText('0 / 0')).toBeInTheDocument();
     });
 
     it('should display exactly 8 answer buttons', async () => {
       const user = userEvent.setup();
       render(<NumbersSection onBack={mockOnBack} />);
 
-      await user.click(screen.getByText('Quiz'));
+      await navigateToQuiz(user);
 
-      await waitFor(() => {
-        // The quiz has a grid of 8 answer buttons plus back button and score area
-        // Answer buttons are in a 2-column grid
-        const grid = document.querySelector('.grid.grid-cols-4');
-        expect(grid).toBeInTheDocument();
+      const grid = document.querySelector('.grid.grid-cols-4');
+      expect(grid).toBeInTheDocument();
 
-        const buttons = grid!.querySelectorAll('button');
-        expect(buttons.length).toBe(8);
-      });
-    });
-
-    it('should show a question category label', async () => {
-      const user = userEvent.setup();
-      render(<NumbersSection onBack={mockOnBack} />);
-
-      await user.click(screen.getByText('Quiz'));
-
-      await waitFor(() => {
-        // Should show one of: Number, Kanji, Reading
-        const labels = ['Number', 'Kanji', 'Reading'];
-        const foundLabel = labels.some((label) => screen.queryByText(label));
-        expect(foundLabel).toBe(true);
-      });
+      const buttons = grid!.querySelectorAll('button');
+      expect(buttons.length).toBe(8);
     });
 
     it('should show feedback after clicking an answer', async () => {
       const user = userEvent.setup();
       render(<NumbersSection onBack={mockOnBack} />);
 
-      await user.click(screen.getByText('Quiz'));
+      await navigateToQuiz(user);
 
-      await waitFor(() => {
-        const grid = document.querySelector('.grid.grid-cols-4');
-        expect(grid).toBeInTheDocument();
-      });
-
-      // Click the first answer button
       const grid = document.querySelector('.grid.grid-cols-4');
       const buttons = grid!.querySelectorAll('button');
       await user.click(buttons[0]);
 
       await waitFor(() => {
-        // Should show either "Correct!" or "Incorrect..."
         const hasCorrect = screen.queryByText('Correct!');
         const hasIncorrect = screen.queryByText(/Incorrect/);
         expect(hasCorrect || hasIncorrect).toBeTruthy();
@@ -162,12 +265,7 @@ describe('NumbersSection', () => {
       const user = userEvent.setup();
       render(<NumbersSection onBack={mockOnBack} />);
 
-      await user.click(screen.getByText('Quiz'));
-
-      await waitFor(() => {
-        const grid = document.querySelector('.grid.grid-cols-4');
-        expect(grid).toBeInTheDocument();
-      });
+      await navigateToQuiz(user);
 
       const grid = document.querySelector('.grid.grid-cols-4');
       const buttons = grid!.querySelectorAll('button');
@@ -182,18 +280,15 @@ describe('NumbersSection', () => {
       const user = userEvent.setup();
       render(<NumbersSection onBack={mockOnBack} />);
 
-      await user.click(screen.getByText('Quiz'));
+      await navigateToQuiz(user);
 
-      await waitFor(() => {
-        expect(screen.getByText('0 / 0')).toBeInTheDocument();
-      });
+      expect(screen.getByText('0 / 0')).toBeInTheDocument();
 
       const grid = document.querySelector('.grid.grid-cols-4');
       const buttons = grid!.querySelectorAll('button');
       await user.click(buttons[0]);
 
       await waitFor(() => {
-        // Score should now show X / 1
         expect(screen.queryByText('0 / 0')).not.toBeInTheDocument();
       });
     });
@@ -202,14 +297,8 @@ describe('NumbersSection', () => {
       const user = userEvent.setup();
       render(<NumbersSection onBack={mockOnBack} />);
 
-      await user.click(screen.getByText('Quiz'));
+      await navigateToQuiz(user);
 
-      await waitFor(() => {
-        const grid = document.querySelector('.grid.grid-cols-4');
-        expect(grid).toBeInTheDocument();
-      });
-
-      // Answer first question
       const grid = document.querySelector('.grid.grid-cols-4');
       const buttons = grid!.querySelectorAll('button');
       await user.click(buttons[0]);
@@ -218,11 +307,9 @@ describe('NumbersSection', () => {
         expect(screen.getByText('Next')).toBeInTheDocument();
       });
 
-      // Click Next
       await user.click(screen.getByText('Next'));
 
       await waitFor(() => {
-        // Feedback should be gone, new question should be shown
         expect(screen.queryByText('Correct!')).not.toBeInTheDocument();
         expect(screen.queryByText(/Incorrect/)).not.toBeInTheDocument();
       });
@@ -232,11 +319,7 @@ describe('NumbersSection', () => {
       const user = userEvent.setup();
       render(<NumbersSection onBack={mockOnBack} />);
 
-      await user.click(screen.getByText('Quiz'));
-
-      await waitFor(() => {
-        expect(screen.getByText('← Back')).toBeInTheDocument();
-      });
+      await navigateToQuiz(user);
 
       await user.click(screen.getByText('← Back'));
 
